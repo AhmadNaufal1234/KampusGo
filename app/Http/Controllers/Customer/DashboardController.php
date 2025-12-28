@@ -9,10 +9,12 @@ class DashboardController extends Controller
 {
 public function index()
 {
-$activeOrder = Order::where('customer_id', auth()->id())
-->whereIn('status', ['pending', 'accepted'])
-->latest()
-->first();
+$activeOrder = Order::with(['messages', 'mitra'])
+    ->where('customer_id', auth()->id())
+    ->whereIn('status', ['pending', 'accepted', 'arrived', 'on_the_way'])
+    ->latest()
+    ->first();
+
 
 return view('customer.dashboard', compact('activeOrder'));
 }

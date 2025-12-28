@@ -15,11 +15,17 @@
         >
             <p class="text-sm text-gray-500 mb-1">💰 Saldo Saat Ini</p>
             <h3 class="text-3xl font-bold text-green-600">
-                Rp {{ number_format($saldo ?? 0) }}
+                Rp {{ number_format(auth()->user()->saldo ?? 0) }}
             </h3>
             <p class="text-xs text-gray-500 mt-2">
                 Saldo akan terpotong 2% tiap transaksi
             </p>
+            <a
+                href="{{ route('mitra.topup') }}"
+                class="inline-block mt-4 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-semibold"
+            >
+                ➕ Top Up Saldo
+            </a>
         </div>
     </div>
 
@@ -60,6 +66,48 @@
                 >
                     🛵
                 </div>
+            </div>
+
+            {{-- AKSI DRIVER --}}
+            <div class="mt-5 flex gap-3 flex-wrap">
+                @if($activeOrder->status === 'accepted')
+                <form
+                    method="POST"
+                    action="{{ route('mitra.order.arrived', $activeOrder->id) }}"
+                >
+                    @csrf
+                    <button
+                        class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg font-semibold"
+                    >
+                        📍 Sudah Sampai Jemputan
+                    </button>
+                </form>
+                @endif @if($activeOrder->status === 'arrived')
+                <form
+                    method="POST"
+                    action="{{ route('mitra.order.onway', $activeOrder->id) }}"
+                >
+                    @csrf
+                    <button
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold"
+                    >
+                        🚗 Mulai Perjalanan
+                    </button>
+                </form>
+                @endif @if($activeOrder->status === 'on_the_way')
+                <form
+                    method="POST"
+                    action="{{ route('mitra.order.complete', $activeOrder->id) }}"
+                    onsubmit="return confirm('Selesaikan pesanan? Saldo akan terpotong 2%');"
+                >
+                    @csrf
+                    <button
+                        class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold"
+                    >
+                        ✅ Selesaikan Pesanan
+                    </button>
+                </form>
+                @endif
             </div>
 
             {{-- CHAT DRIVER --}}
@@ -117,7 +165,7 @@
         <div class="p-5 grid md:grid-cols-3 gap-4 items-center">
             <div class="md:col-span-2">
                 <p class="font-semibold text-gray-800">
-                    👤 {{ $order->user->name }}
+                    👤 {{ $order->customer->name ?? '-' }}
                 </p>
 
                 <p class="text-gray-700">

@@ -16,11 +16,12 @@ class OrderController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'service_type' => 'required|in:ride,jastip',
-            'pickup_address' => 'required',
-            'destination_address' => 'required',
-            'distance_km' => 'required|numeric',
-            'payment_method' => 'required|in:cash,ewallet'
+            'service_type'        => 'required|in:ride,jastip',
+            'pickup_address'      => 'required|string',
+            'destination_address' => 'required|string',
+            'distance_km'         => 'required|numeric|min:0.1',
+            'payment_method'      => 'required|in:cash,ewallet',
+            'item_description'    => 'nullable|string'
         ]);
 
         // Tarif sederhana
@@ -28,18 +29,20 @@ class OrderController extends Controller
         $price = $request->distance_km * $tarifPerKm;
 
         Order::create([
-            'customer_id' => auth()->id(),
-            'service_type' => $request->service_type,
-            'pickup_address' => $request->pickup_address,
+            'customer_id'         => auth()->id(),
+            'service_type'        => $request->service_type,
+            'pickup_address'      => $request->pickup_address,
             'destination_address' => $request->destination_address,
-            'item_description' => $request->item_description,
-            'distance_km' => $request->distance_km,
-            'price' => $price,
-            'payment_method' => $request->payment_method,
-            'status' => 'pending'
+            'item_description'    => $request->item_description,
+            'distance_km'         => $request->distance_km,
+            'price'               => $price,
+            'payment_method'      => $request->payment_method,
+            'status'              => 'pending',
         ]);
 
-        return redirect('/customer/dashboard')->with('success', 'Order berhasil dibuat');
+        return redirect()
+            ->route('customer.dashboard')
+            ->with('success', 'Pesanan berhasil dibuat');
     }
 
     public function history()
@@ -53,18 +56,25 @@ class OrderController extends Controller
 
     public function cancel(Order $order)
     {
+        // Pastikan order milik customer
         if ($order->customer_id !== auth()->id()) {
             abort(403);
         }
 
+        // Hanya bisa dibatalkan jika masih pending
         if ($order->status !== 'pending') {
-            return back()->with('error', 'Pesanan tidak bisa dibatalkan');
+            return back()->with(
+                'error',
+                'Pesanan tidak bisa dibatalkan karena sudah diproses driver.'
+            );
         }
 
         $order->update([
-            'status' => 'cancelled'
+            'status' => 'rejected'
         ]);
 
-        return back()->with('success', 'Pesanan berhasil dibatalkan');
+        return redirect()
+            ->route('customer.dashboard')
+            ->with('success', 'Pesanan berhasil dibatalkan.');
     }
 }

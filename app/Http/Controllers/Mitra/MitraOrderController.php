@@ -4,22 +4,18 @@ namespace App\Http\Controllers\Mitra;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class MitraOrderController extends Controller
 {
     public function index()
     {
-        $user = auth()->user();
-
-        // Order yang sedang berjalan (hanya satu)
-        $activeOrder = Order::with('user')
-            ->where('mitra_id', auth()->id())
-            ->where('status', 'accepted')
+        $activeOrder = Order::where('mitra_id', auth()->id())
+            ->whereNotIn('status', ['completed', 'rejected'])
+            ->latest()
             ->first();
 
 
-        // Order yang masih menunggu driver
         $pendingOrders = Order::where('status', 'pending')
             ->orderBy('created_at', 'asc')
             ->get();
@@ -27,62 +23,78 @@ class MitraOrderController extends Controller
         return view('mitra.dashboard', compact('activeOrder', 'pendingOrders'));
     }
 
-    /**
-     * Terima order (JANGAN langsung completed)
-     */
     public function accept(Order $order)
     {
-        // Set order jadi diterima & simpan driver
+        if ($order->status !== 'pending') {
+            return back()->with('error', 'Order tidak tersedia.');
+        }
+
         $order->update([
             'status'   => 'accepted',
             'mitra_id' => auth()->id(),
         ]);
 
-        // Potong saldo 2%
-        $komisi = $order->price * 0.02;
-        auth()->user()->decrement('balance', $komisi);
-
         return redirect()->route('mitra.dashboard')
             ->with('success', 'Order berhasil diterima');
     }
 
-    /**
-     * Selesaikan order (baru potong saldo)
-     */
+    public function arrived(Order $order)
+    {
+        if ($order->status !== 'accepted' || $order->mitra_id !== auth()->id()) {
+            return back();
+        }
+
+        $order->update(['status' => 'arrived']);
+
+        return back()->with('success', 'Sudah sampai di titik jemput');
+    }
+
+    public function onWay(Order $order)
+    {
+        if ($order->status !== 'arrived' || $order->mitra_id !== auth()->id()) {
+            return back();
+        }
+
+        $order->update(['status' => 'on_the_way']);
+
+        return back()->with('success', 'Perjalanan dimulai');
+    }
+
     public function complete(Order $order)
     {
-        if ($order->status !== 'accepted') {
+        if ($order->status !== 'on_the_way' || $order->mitra_id !== auth()->id()) {
             return back()->with('error', 'Order belum bisa diselesaikan.');
         }
 
-        // Potong komisi 2%
-        $komisi = $order->price * 0.02;
+        DB::transaction(function () use ($order) {
+            $driver = auth()->user();
 
-        $mitra = auth()->user();
-        $mitra->balance -= $komisi;
-        $mitra->save();
+            $potongan = $order->price * 0.02;
 
-        $order->update([
-            'status' => 'completed'
-        ]);
+            if ($driver->saldo < $potongan) {
+                throw new \Exception('Saldo tidak cukup');
+            }
 
-        return back()->with('success', 'Order berhasil diselesaikan.');
+            // Potong saldo
+            $driver->decrement('saldo', $potongan);
+
+            // Update order
+            $order->update([
+                'status' => 'completed'
+            ]);
+        });
+
+        return redirect()->route('mitra.dashboard')
+            ->with('success', 'Pesanan selesai. Saldo terpotong 2%.');
     }
 
-    /**
-     * Tolak order
-     */
-    public function reject($id)
+    public function reject(Order $order)
     {
-        $order = Order::findOrFail($id);
-
         if ($order->status !== 'pending') {
             return back()->with('error', 'Order tidak bisa ditolak.');
         }
 
-        $order->update([
-            'status' => 'rejected'
-        ]);
+        $order->update(['status' => 'rejected']);
 
         return back()->with('success', 'Order berhasil ditolak.');
     }

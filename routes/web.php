@@ -6,12 +6,15 @@ use App\Http\Controllers\Customer\OrderController as CustomerOrderController;
 use App\Http\Controllers\Customer\DashboardController as CustomerDashboardController;
 use App\Http\Controllers\Mitra\MitraOrderController;
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\Mitra\MitraTopupController;
+
 
 /*
 |--------------------------------------------------------------------------
 | Public
 |--------------------------------------------------------------------------
 */
+
 Route::get('/', function () {
     return redirect()->route('login');
 });
@@ -23,7 +26,7 @@ Route::get('/', function () {
 */
 Route::get('/dashboard', function () {
     return view('dashboard');
-})->middleware(['auth'])->name('dashboard');
+})->middleware('auth')->name('dashboard');
 
 require __DIR__ . '/auth.php';
 
@@ -33,9 +36,14 @@ require __DIR__ . '/auth.php';
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/profile', [ProfileController::class, 'edit'])
+        ->name('profile.edit');
+
+    Route::patch('/profile', [ProfileController::class, 'update'])
+        ->name('profile.update');
+
+    Route::delete('/profile', [ProfileController::class, 'destroy'])
+        ->name('profile.destroy');
 });
 
 /*
@@ -51,7 +59,7 @@ Route::middleware(['auth', 'role:customer'])
         Route::get('/dashboard', [CustomerDashboardController::class, 'index'])
             ->name('dashboard');
 
-        Route::get('/order/create', [CustomerOrderController::class, 'create'])
+        Route::get('/order', [CustomerOrderController::class, 'create'])
             ->name('order.create');
 
         Route::post('/order', [CustomerOrderController::class, 'store'])
@@ -63,6 +71,22 @@ Route::middleware(['auth', 'role:customer'])
         Route::post('/order/{order}/cancel', [CustomerOrderController::class, 'cancel'])
             ->name('order.cancel');
     });
+
+Route::post(
+    '/mitra/order/{order}/complete',
+    [MitraOrderController::class, 'complete']
+)->name('mitra.order.complete');
+
+// routes/web.php
+Route::middleware(['auth'])->group(function () {
+
+    Route::get('/mitra/topup', [MitraTopupController::class, 'index'])
+        ->name('mitra.topup');
+
+    Route::post('/mitra/topup', [MitraTopupController::class, 'store'])
+        ->name('mitra.topup.store');
+});
+
 
 /*
 |--------------------------------------------------------------------------
@@ -82,6 +106,12 @@ Route::middleware(['auth', 'role:mitra'])
 
         Route::post('/order/{order}/reject', [MitraOrderController::class, 'reject'])
             ->name('order.reject');
+
+        Route::post('/order/{order}/arrived', [MitraOrderController::class, 'arrived'])
+            ->name('order.arrived');
+
+        Route::post('/order/{order}/on-way', [MitraOrderController::class, 'onWay'])
+            ->name('order.onway');
     });
 
 /*

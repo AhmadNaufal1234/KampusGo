@@ -10,120 +10,102 @@
         </p>
     </div>
 
-    {{-- ================= ACTIVE ORDER ================= --}}
     @if($activeOrder) @php $driverName = $activeOrder->mitra->name ?? 'Driver';
-    @endphp @if($activeOrder->status === 'pending')
-    {{-- MENUNGGU DRIVER --}}
-    <div class="flex flex-col items-center justify-center text-center mb-14">
-        <div class="relative w-40 h-40 mb-6">
+    @endphp
+
+    {{-- ================= MENUNGGU DRIVER ================= --}}
+    @if($activeOrder->status === 'pending')
+    <div class="text-center mb-12">
+        {{-- RADAR --}}
+        <div class="relative w-40 h-40 mx-auto mb-6">
             <div
-                class="absolute inset-0 rounded-full bg-blue-200 animate-ping opacity-30"
+                class="absolute inset-0 rounded-full bg-blue-400 opacity-20 radar"
             ></div>
             <div
-                class="absolute inset-3 rounded-full bg-blue-300 animate-pulse opacity-40"
+                class="absolute inset-6 rounded-full bg-blue-300 opacity-30 radar-delay"
             ></div>
             <div
-                class="absolute inset-6 rounded-full bg-blue-600 flex items-center justify-center text-white text-3xl font-bold shadow-lg"
+                class="absolute inset-12 rounded-full bg-blue-600 flex items-center justify-center text-white text-3xl"
             >
-                🚗
+                📍
             </div>
         </div>
 
         <h3 class="text-xl font-semibold text-gray-800 mb-2">
             Mencari Driver Terdekat...
         </h3>
-
-        <p class="text-gray-500 mb-4">
-            Mohon tunggu, sistem sedang mencarikan driver terbaik 🚀
-        </p>
-
-        <span
-            class="inline-block px-4 py-1 rounded-full bg-yellow-100 text-yellow-700 text-sm font-semibold mb-6"
-        >
-            Status: Menunggu Driver
-        </span>
-
-        <form
-            method="POST"
-            action="{{ route('customer.order.cancel', $activeOrder->id) }}"
-        >
-            @csrf
-            <button
-                class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-semibold"
-            >
-                Batalkan Pesanan
-            </button>
-        </form>
+        <p class="text-gray-500">Sistem sedang memindai lokasi driver 📡</p>
     </div>
+    @endif
 
-    @elseif($activeOrder->status === 'accepted')
-
-    {{-- DRIVER DALAM PERJALANAN --}}
+    {{-- ================= DRIVER AKTIF ================= --}}
+    @if(in_array($activeOrder->status, ['accepted','arrived','on_the_way']))
     <div class="mb-10">
-        <div
-            class="bg-blue-50 border border-blue-200 rounded-2xl p-6 shadow-sm"
-        >
-            <h3 class="text-xl font-semibold text-blue-800 mb-2">
-                🚗 Driver Sedang Menuju Lokasi
-            </h3>
+        <h3 class="text-xl font-semibold text-center mb-3">
+            @if($activeOrder->status === 'accepted') Driver Menuju Lokasi 🚗
+            @elseif($activeOrder->status === 'arrived') Driver Sudah Sampai 📍
+            @elseif($activeOrder->status === 'on_the_way') Sedang Dalam
+            Perjalanan 🚀 @endif
+        </h3>
 
-            <p class="text-gray-700 mb-1">
-                <strong>Driver:</strong> {{ $driverName }}
-            </p>
-
-            <p class="text-gray-700 mb-2">
-                <strong>Rute:</strong> {{ $activeOrder->pickup_address }} →
-                {{ $activeOrder->destination_address }}
-            </p>
-
-            @if($activeOrder->item_description)
-            <p class="text-gray-600 mb-3">
-                🧾 {{ $activeOrder->item_description }}
-            </p>
-            @endif
-
-            <!-- ANIMASI JALAN -->
+        {{-- JALAN --}}
+        <div class="relative h-20 overflow-hidden bg-blue-100 rounded-xl mb-4">
             <div
-                class="relative h-16 overflow-hidden rounded-xl bg-blue-100 mb-3"
+                class="absolute top-1/2 -translate-y-1/2 animate-drive
+            {{ $activeOrder->status === 'on_the_way' ? 'fast' : '' }}"
             >
-                <div
-                    class="absolute top-1/2 -translate-y-1/2 animate-drive text-3xl"
-                >
-                    🛵
-                </div>
-            </div>
-
-            <p class="text-gray-700 mb-1">
-                <strong>Driver:</strong>
-                <span
-                    id="driver-name"
-                    >{{ $activeOrder->mitra->name ?? '-' }}</span
-                >
-            </p>
-
-            <p class="text-gray-700 mb-2">
-                Status:
-                <span id="order-status" class="font-semibold">
-                    {{ $activeOrder->status }}
-                </span>
-            </p>
-
-            <div class="flex items-center gap-3">
-                <span
-                    class="inline-block bg-blue-600 text-white px-4 py-1 rounded-full text-sm font-semibold"
-                >
-                    Sedang Dalam Perjalanan
-                </span>
-
-                <span class="text-sm text-gray-600">
-                    💰 Tarif: Rp {{ number_format($activeOrder->price) }}
-                </span>
+                🛵
             </div>
         </div>
+
+        <div
+            class="bg-blue-50 border border-blue-200 rounded-xl p-5 text-center"
+        >
+            <p><strong>Driver:</strong> {{ $driverName }}</p>
+            <p class="mt-1">
+                {{ $activeOrder->pickup_address }} →
+                {{ $activeOrder->destination_address }}
+            </p>
+            <p class="mt-2 text-green-600 font-semibold">
+                💰 Rp {{ number_format($activeOrder->price) }}
+            </p>
+        </div>
+    </div>
+    @endif
+
+    {{-- ================= COMPLETED ================= --}}
+    @if($activeOrder->status === 'completed')
+    <div class="bg-gray-50 border rounded-xl p-6 text-center mb-10">
+        <h3 class="text-xl font-semibold text-gray-700">✅ Pesanan Selesai</h3>
+        <p class="text-gray-500 mt-1">
+            Terima kasih sudah menggunakan layanan kami 🙏
+        </p>
     </div>
     @endif @endif
 
     <style>
+        /* RADAR */
+        @keyframes radar {
+            0% {
+                transform: scale(0.3);
+                opacity: 0.6;
+            }
+            100% {
+                transform: scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        .radar {
+            animation: radar 2s infinite;
+        }
+
+        .radar-delay {
+            animation: radar 2s infinite;
+            animation-delay: 1s;
+        }
+
+        /* DRIVER JALAN */
         @keyframes drive {
             0% {
                 left: 110%;
@@ -136,29 +118,39 @@
         .animate-drive {
             position: absolute;
             left: 110%;
+            font-size: 2rem;
             animation: drive 6s linear infinite;
+        }
+
+        /* CEPAT SAAT ON THE WAY */
+        .fast {
+            animation-duration: 3s;
         }
     </style>
 
+    @if($activeOrder && in_array($activeOrder->status, ['accepted',
+    'on_the_way']))
     {{-- CHAT DRIVER --}}
     <div class="mt-6 bg-white border rounded-xl p-4 shadow">
         <h4 class="font-semibold text-gray-700 mb-3">💬 Chat dengan Driver</h4>
 
         <div class="h-56 overflow-y-auto mb-3 space-y-2 bg-gray-50 p-3 rounded">
-            @foreach($activeOrder->messages as $msg)
+            @forelse($activeOrder->messages ?? [] as $msg)
             <div
                 class="{{ $msg->sender_id == auth()->id() ? 'text-right' : 'text-left' }}"
             >
                 <div
                     class="inline-block px-3 py-2 rounded-lg 
-                    {{ $msg->sender_id == auth()->id() 
-                        ? 'bg-blue-600 text-white' 
-                        : 'bg-gray-200 text-gray-800' }}"
+                        {{ $msg->sender_id == auth()->id() 
+                            ? 'bg-blue-600 text-white' 
+                            : 'bg-gray-200 text-gray-800' }}"
                 >
                     {{ $msg->message }}
                 </div>
             </div>
-            @endforeach
+            @empty
+            <p class="text-center text-gray-400 text-sm">Belum ada pesan</p>
+            @endforelse
         </div>
 
         <form
@@ -179,6 +171,7 @@
             </button>
         </form>
     </div>
+    @endif
 
     {{-- MENU UTAMA --}}
     <div class="grid md:grid-cols-3 gap-8">
@@ -247,31 +240,23 @@
     </div>
 </div>
 
+@if($activeOrder)
 <script>
-    const orderId = "{{ $activeOrder->id ?? '' }}";
+    const orderId = "{{ $activeOrder->id }}";
 
-    if (orderId) {
-        setInterval(() => {
-            fetch(`/order/${orderId}/status`)
-                .then((res) => res.json())
-                .then((data) => {
-                    const statusText = document.getElementById("order-status");
-                    const driverName = document.getElementById("driver-name");
+    setInterval(() => {
+        fetch(`{{ url('/order') }}/${orderId}/status`)
+            .then((res) => res.json())
+            .then((data) => {
+                const statusText = document.getElementById("order-status");
+                const driverName = document.getElementById("driver-name");
 
-                    if (statusText) {
-                        statusText.innerText = data.status;
-                    }
+                if (statusText) statusText.innerText = data.status;
+                if (driverName && data.driver)
+                    driverName.innerText = data.driver;
 
-                    if (driverName && data.driver) {
-                        driverName.innerText = data.driver;
-                    }
-
-                    if (data.status === "completed") {
-                        location.reload();
-                    }
-                });
-        }, 4000);
-    }
+                if (data.status === "completed") location.reload();
+            });
+    }, 4000);
 </script>
-
-@endsection
+@endif @endsection
