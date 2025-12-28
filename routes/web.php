@@ -1,77 +1,106 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Customer\OrderController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Customer\OrderController as CustomerOrderController;
+use App\Http\Controllers\Customer\DashboardController as CustomerDashboardController;
 use App\Http\Controllers\Mitra\MitraOrderController;
-use App\Http\Controllers\Customer\DashboardController;
 
+
+/*
+|--------------------------------------------------------------------------
+| Public
+|--------------------------------------------------------------------------
+*/
 Route::get('/', function () {
     return view('welcome');
 });
 
+/*
+|--------------------------------------------------------------------------
+| Auth Default
+|--------------------------------------------------------------------------
+*/
 Route::get('/dashboard', function () {
     return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+})->middleware(['auth'])->name('dashboard');
 
+require __DIR__.'/auth.php';
+
+/*
+|--------------------------------------------------------------------------
+| Profile
+|--------------------------------------------------------------------------
+*/
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-Route::middleware(['auth', 'role:customer'])->group(function () {
-    Route::view('/customer/dashboard', 'customer.dashboard');
+/*
+|--------------------------------------------------------------------------
+| CUSTOMER
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'role:customer'])
+    ->prefix('customer')
+    ->name('customer.')
+    ->group(function () {
+
+        Route::get('/dashboard', [CustomerDashboardController::class, 'index'])
+            ->name('dashboard');
+
+        Route::get('/order/create', [CustomerOrderController::class, 'create'])
+            ->name('order.create');
+
+        Route::post('/order', [CustomerOrderController::class, 'store'])
+            ->name('order.store');
+
+        Route::get('/orders', [CustomerOrderController::class, 'history'])
+            ->name('orders.history');
+
+        Route::post('/order/{order}/cancel', [CustomerOrderController::class, 'cancel'])
+            ->name('order.cancel');
 });
 
-Route::middleware(['auth', 'role:mitra'])->group(function () {
-    Route::view('/mitra/dashboard', 'mitra.dashboard');
-    Route::view('/mitra/saldo', 'mitra.saldo');
+/*
+|--------------------------------------------------------------------------
+| MITRA
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'role:mitra'])
+    ->prefix('mitra')
+    ->name('mitra.')
+    ->group(function () {
+
+        Route::get('/dashboard', [MitraOrderController::class, 'index'])
+            ->name('dashboard');
+
+        Route::post('/order/{order}/accept', [MitraOrderController::class, 'accept'])
+            ->name('order.accept');
 });
 
-Route::middleware(['auth', 'role:admin'])->group(function () {
-    Route::view('/admin/dashboard', 'admin.dashboard');
+/*
+|--------------------------------------------------------------------------
+| ADMIN
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'role:admin'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+
+        Route::get('/dashboard', function () {
+            return view('admin.dashboard');
+        })->name('dashboard');
 });
 
-Route::middleware(['auth', 'role:customer'])->group(function () {
-    Route::get('/customer/order', [OrderController::class, 'create']);
-    Route::post('/customer/order', [OrderController::class, 'store']);
-});
-
-Route::middleware(['auth', 'role:mitra'])->group(function () {
-    Route::get('/mitra/dashboard', [MitraOrderController::class, 'index']);
-    Route::post('/mitra/order/{order}/accept', [MitraOrderController::class, 'accept']);
-});
-
+/*
+|--------------------------------------------------------------------------
+| Debug
+|--------------------------------------------------------------------------
+*/
 Route::get('/cek-login', function () {
     return auth()->user();
-});
-
-Route::middleware(['auth', 'role:customer'])->group(function () {
-    Route::get('/customer/dashboard', function () {
-        return view('customer.dashboard');
-    })->name('customer.dashboard');
-
-    Route::get('/customer/order/create', [OrderController::class, 'create'])
-        ->name('customer.order.create');
-
-    Route::get('/customer/orders', [OrderController::class, 'history'])
-        ->name('customer.orders.history');
-
-        Route::post('/order', [OrderController::class, 'store'])
-        ->name('customer.order.store');
-
-});
-
-Route::middleware(['auth'])->prefix('customer')->name('customer.')->group(function () {
-
-    Route::get('/dashboard', [DashboardController::class, 'index'])
-        ->name('dashboard');
-
-    Route::post('/order/{order}/cancel', [OrderController::class, 'cancel'])
-        ->name('order.cancel');
-
-});
-
-
-require __DIR__.'/auth.php';
+})->middleware('auth');
