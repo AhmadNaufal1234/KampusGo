@@ -5,7 +5,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Customer\OrderController as CustomerOrderController;
 use App\Http\Controllers\Customer\DashboardController as CustomerDashboardController;
 use App\Http\Controllers\Mitra\MitraOrderController;
-
+use App\Http\Controllers\ChatController;
 
 /*
 |--------------------------------------------------------------------------
@@ -13,7 +13,7 @@ use App\Http\Controllers\Mitra\MitraOrderController;
 |--------------------------------------------------------------------------
 */
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('login');
 });
 
 /*
@@ -25,7 +25,7 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth'])->name('dashboard');
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
 
 /*
 |--------------------------------------------------------------------------
@@ -40,7 +40,7 @@ Route::middleware('auth')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| CUSTOMER
+| CUSTOMER ROUTES
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'role:customer'])
@@ -62,11 +62,11 @@ Route::middleware(['auth', 'role:customer'])
 
         Route::post('/order/{order}/cancel', [CustomerOrderController::class, 'cancel'])
             ->name('order.cancel');
-});
+    });
 
 /*
 |--------------------------------------------------------------------------
-| MITRA
+| MITRA ROUTES
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'role:mitra'])
@@ -79,6 +79,19 @@ Route::middleware(['auth', 'role:mitra'])
 
         Route::post('/order/{order}/accept', [MitraOrderController::class, 'accept'])
             ->name('order.accept');
+
+        Route::post('/order/{order}/reject', [MitraOrderController::class, 'reject'])
+            ->name('order.reject');
+    });
+
+/*
+|--------------------------------------------------------------------------
+| CHAT (Customer ↔ Driver)
+|--------------------------------------------------------------------------
+*/
+Route::middleware('auth')->group(function () {
+    Route::post('/order/{order}/chat', [ChatController::class, 'send'])
+        ->name('order.chat.send');
 });
 
 /*
@@ -90,15 +103,14 @@ Route::middleware(['auth', 'role:admin'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
-
         Route::get('/dashboard', function () {
             return view('admin.dashboard');
         })->name('dashboard');
-});
+    });
 
 /*
 |--------------------------------------------------------------------------
-| Debug
+| DEBUG
 |--------------------------------------------------------------------------
 */
 Route::get('/cek-login', function () {

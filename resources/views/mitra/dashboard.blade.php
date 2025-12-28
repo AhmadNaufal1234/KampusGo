@@ -1,104 +1,189 @@
-@extends('layouts.app')
-
-@section('content')
+@extends('layouts.app') @section('content')
 <div class="max-w-6xl mx-auto px-4 py-8">
-
-    <!-- Header -->
+    <!-- HEADER -->
     <div class="mb-8">
-        <h2 class="text-3xl font-bold text-gray-800">
-            Dashboard Mitra
-        </h2>
+        <h2 class="text-3xl font-bold text-gray-800">Dashboard Mitra</h2>
         <p class="text-gray-500 mt-1">
-            Kelola saldo dan terima order KampusGO 🚀
+            Kelola pesanan & komunikasi dengan customer 🚀
         </p>
     </div>
 
-    <!-- Saldo -->
+    <!-- SALDO -->
     <div class="grid md:grid-cols-3 gap-6 mb-10">
-
-        <div class="bg-gradient-to-br from-green-50 to-white
-                    border border-green-200 rounded-2xl p-6 shadow-sm">
-
-            <p class="text-sm text-gray-500 mb-1">
-                💰 Saldo Saat Ini
-            </p>
-
+        <div
+            class="bg-gradient-to-br from-green-50 to-white border border-green-200 rounded-2xl p-6 shadow-sm"
+        >
+            <p class="text-sm text-gray-500 mb-1">💰 Saldo Saat Ini</p>
             <h3 class="text-3xl font-bold text-green-600">
                 Rp {{ number_format($saldo ?? 0) }}
             </h3>
-
             <p class="text-xs text-gray-500 mt-2">
-                Saldo akan terpotong 2% setiap transaksi
+                Saldo akan terpotong 2% tiap transaksi
             </p>
         </div>
-
     </div>
 
-    <!-- Order Masuk -->
-    <h3 class="text-2xl font-bold text-gray-800 mb-5">
-        📥 Order Masuk
-    </h3>
+    {{-- ================= ORDER AKTIF ================= --}}
+    @if($activeOrder)
+    <div class="mb-10">
+        <h3 class="text-2xl font-bold text-gray-800 mb-4">
+            🚗 Order Sedang Berjalan
+        </h3>
 
-    @forelse($orders as $order)
-        <div class="bg-white rounded-xl shadow-sm border
-                    hover:shadow-md transition mb-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-6 shadow-sm">
+            <p class="text-lg font-semibold text-gray-800">
+                👤 Customer:
+                {{ optional($activeOrder->user)->name ?? 'Customer' }}
+            </p>
 
-            <div class="p-5 grid md:grid-cols-3 gap-4 items-center">
+            <p class="text-gray-700 mt-1">
+                📍 {{ $activeOrder->pickup_address }} →
+                {{ $activeOrder->destination_address }}
+            </p>
 
-                <!-- Info Order -->
-                <div class="md:col-span-2">
-                    <span class="inline-block mb-1 text-xs font-semibold
-                        {{ $order->service_type === 'ride'
-                            ? 'text-blue-600'
-                            : 'text-green-600' }}">
-                        {{ $order->service_type === 'ride' ? '🚕 Antar Jemput' : '🛒 Jasa Titip' }}
-                    </span>
+            @if($activeOrder->item_description)
+            <p class="text-gray-600 mt-1">
+                🧾 {{ $activeOrder->item_description }}
+            </p>
+            @endif
 
-                    <p class="font-semibold text-gray-800">
-                        {{ $order->pickup_address }}
-                        <span class="mx-1">→</span>
-                        {{ $order->destination_address }}
-                    </p>
+            <p class="mt-3 font-semibold text-blue-700">
+                💰 Tarif: Rp {{ number_format($activeOrder->price) }}
+            </p>
 
-                    @if($order->service_type === 'jastip' && $order->item_description)
-                        <p class="text-sm text-gray-500 mt-1">
-                            🧾 {{ $order->item_description }}
-                        </p>
-                    @endif
+            <!-- ANIMASI DRIVER -->
+            <div
+                class="relative mt-6 h-16 overflow-hidden bg-blue-100 rounded-lg"
+            >
+                <div
+                    class="absolute top-1/2 -translate-y-1/2 animate-drive text-3xl"
+                >
+                    🛵
+                </div>
+            </div>
+
+            {{-- CHAT DRIVER --}}
+            <div class="mt-6 bg-white border rounded-xl p-4 shadow">
+                <h4 class="font-semibold text-gray-700 mb-3">
+                    💬 Chat dengan Driver
+                </h4>
+
+                <div
+                    class="h-56 overflow-y-auto mb-3 space-y-2 bg-gray-50 p-3 rounded"
+                >
+                    @foreach($activeOrder->messages as $msg)
+                    <div
+                        class="{{ $msg->sender_id == auth()->id() ? 'text-right' : 'text-left' }}"
+                    >
+                        <div
+                            class="inline-block px-3 py-2 rounded-lg 
+                    {{ $msg->sender_id == auth()->id() 
+                        ? 'bg-blue-600 text-white' 
+                        : 'bg-gray-200 text-gray-800' }}"
+                        >
+                            {{ $msg->message }}
+                        </div>
+                    </div>
+                    @endforeach
                 </div>
 
-                <!-- Harga & Aksi -->
-                <div class="flex md:flex-col justify-between items-end gap-4">
+                <form
+                    method="POST"
+                    action="{{ route('order.chat.send', $activeOrder->id) }}"
+                    class="flex gap-2"
+                >
+                    @csrf
+                    <input
+                        type="text"
+                        name="message"
+                        placeholder="Ketik pesan ke driver..."
+                        class="flex-1 border rounded-lg px-3 py-2"
+                        required
+                    />
+                    <button class="bg-blue-600 text-white px-4 py-2 rounded-lg">
+                        Kirim
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    @endif
 
-                    <div class="text-right">
-                        <p class="text-xs text-gray-500">Tarif</p>
-                        <p class="text-lg font-bold text-green-600">
-                            Rp {{ number_format($order->price) }}
-                        </p>
-                    </div>
+    {{-- ================= ORDER MASUK ================= --}}
+    <h3 class="text-2xl font-bold text-gray-800 mb-5">📥 Order Masuk</h3>
 
-                    <form method="POST"
-                          action="{{ route('mitra.order.accept', $order->id) }}">
+    @forelse($pendingOrders as $order)
+    <div class="bg-white rounded-xl shadow-sm border mb-5">
+        <div class="p-5 grid md:grid-cols-3 gap-4 items-center">
+            <div class="md:col-span-2">
+                <p class="font-semibold text-gray-800">
+                    👤 {{ $order->user->name }}
+                </p>
+
+                <p class="text-gray-700">
+                    {{ $order->pickup_address }} →
+                    {{ $order->destination_address }}
+                </p>
+
+                @if($order->item_description)
+                <p class="text-sm text-gray-500 mt-1">
+                    🧾 {{ $order->item_description }}
+                </p>
+                @endif
+            </div>
+
+            <div class="flex flex-col items-end gap-3">
+                <p class="text-lg font-bold text-green-600">
+                    Rp {{ number_format($order->price) }}
+                </p>
+
+                <div class="flex gap-2">
+                    <form
+                        method="POST"
+                        action="{{ route('mitra.order.accept', $order->id) }}"
+                    >
                         @csrf
                         <button
-                            class="bg-green-600 hover:bg-green-700
-                                   text-white px-5 py-2 rounded-full
-                                   text-sm font-semibold shadow transition">
-                            Terima Order ✔
+                            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full"
+                        >
+                            Terima
                         </button>
                     </form>
 
+                    <form
+                        method="POST"
+                        action="{{ route('mitra.order.reject', $order->id) }}"
+                    >
+                        @csrf
+                        <button
+                            class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-full"
+                        >
+                            Tolak
+                        </button>
+                    </form>
                 </div>
-
             </div>
         </div>
+    </div>
     @empty
-        <div class="bg-white rounded-xl p-8 text-center shadow-sm">
-            <p class="text-gray-500">
-                📭 Belum ada order masuk
-            </p>
-        </div>
+    <div class="bg-white rounded-xl p-8 text-center shadow-sm">
+        <p class="text-gray-500">📭 Tidak ada order masuk</p>
+    </div>
     @endforelse
-
 </div>
+
+<style>
+    @keyframes drive {
+        0% {
+            left: 110%;
+        }
+        100% {
+            left: -10%;
+        }
+    }
+    .animate-drive {
+        position: absolute;
+        animation: drive 6s linear infinite;
+    }
+</style>
 @endsection

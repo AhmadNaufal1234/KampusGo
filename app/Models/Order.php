@@ -18,4 +18,19 @@ class Order extends Model
         'payment_method',
         'status'
     ];
+
+    public function mitra()
+    {
+        return $this->belongsTo(User::class, 'mitra_id');
+    }
+
+    public function messages()
+    {
+        return $this->hasMany(\App\Models\OrderMessage::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }
