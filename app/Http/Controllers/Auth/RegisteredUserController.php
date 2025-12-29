@@ -24,28 +24,35 @@ class RegisteredUserController extends Controller
 
     /**
      * Handle an incoming registration request.
-     *
-     * @throws \Illuminate\Validation\ValidationException
      */
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
+            'name'     => ['required', 'string', 'max:255'],
+            'email'    => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'role' => ['nullable', 'in:customer,mitra'], // 🔒 whitelist
+            'role'     => ['nullable', 'in:customer,mitra'],
         ]);
 
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
+            'name'     => $request->name,
+            'email'    => $request->email,
             'password' => Hash::make($request->password),
-            'role' => $request->role ?? 'customer', // ✅ FIX
+            'role'     => $request->role ?? 'customer', // default customer
         ]);
 
         event(new Registered($user));
         Auth::login($user);
 
-        return redirect(route('dashboard', absolute: false));
+        // 🔥 ROLE BASED REDIRECT
+        if ($user->role === 'customer') {
+            return redirect()->route('customer.dashboard');
+        }
+
+        if ($user->role === 'mitra') {
+            return redirect()->route('mitra.dashboard');
+        }
+
+        return redirect()->route('dashboard');
     }
 }

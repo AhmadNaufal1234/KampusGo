@@ -49,10 +49,12 @@ return new class extends Migration
 
             // 🔥 STATUS PEMBAYARAN (ESCROW SYSTEM)
             $table->enum('payment_status', [
-                'unpaid',   // cash / belum bayar
-                'paid',     // ewallet masuk sistem
-                'released'  // saldo sudah diberikan ke driver
+                'unpaid',
+                'held',
+                'paid',
+                'released'
             ])->default('unpaid');
+
 
             // Status order
             $table->enum('status', [

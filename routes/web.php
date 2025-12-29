@@ -8,6 +8,7 @@ use App\Http\Controllers\Mitra\MitraOrderController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\Mitra\MitraTopupController;
 use App\Http\Controllers\TopUpController;
+use App\Http\Controllers\Admin\AdminDashboardController;
 
 
 /*
@@ -93,6 +94,14 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/mitra/topup', [MitraTopupController::class, 'store'])
         ->name('mitra.topup.store');
 });
+
+    Route::middleware(['auth', 'role:admin'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        Route::get('/dashboard', [AdminDashboardController::class, 'index'])
+            ->name('dashboard');
+    });
 
 
 /*

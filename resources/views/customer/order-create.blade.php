@@ -2,7 +2,7 @@
 <div class="max-w-3xl mx-auto px-4 py-6">
     <!-- Header -->
     <div class="mb-6">
-        <h2 class="text-2xl font-bold text-gray-800">Buat Pesanan 🚀</h2>
+        <h2 class="text-2xl font-bold text-gray-800">Buat Pesanan Anda</h2>
         <p class="text-gray-500 mt-1">
             Lengkapi data di bawah untuk melanjutkan pemesanan
         </p>
@@ -26,7 +26,7 @@
                 name="service_type"
                 class="w-full p-2.5 border rounded-lg focus:ring focus:ring-blue-200"
             >
-                <option value="ride">🚕 Antar Jemput</option>
+                <option value="ride">🛵 Antar Jemput</option>
                 <option value="jastip">🛒 Jasa Titip</option>
             </select>
         </div>
@@ -119,7 +119,7 @@
                 onclick="submitWithEwallet()"
                 class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold"
             >
-                💰 Bayar Sekarang
+                Bayar Sekarang
             </button>
         </div>
 
@@ -176,6 +176,24 @@ document.getElementById('submitOrderBtn').addEventListener('click', function () 
         }
     });
 });
+</script>
+<script>
+function submitWithEwallet() {
+    Swal.fire({
+        title: 'Konfirmasi Pembayaran',
+        text: 'Saldo e-wallet akan dipotong sesuai total pesanan.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, Bayar Sekarang',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#16a34a',
+        cancelButtonColor: '#d33',
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('orderForm').submit();
+        }
+    });
+}
 </script>
 
 @endsection

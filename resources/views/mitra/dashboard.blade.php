@@ -13,7 +13,7 @@
         <div
             class="bg-gradient-to-br from-green-50 to-white border border-green-200 rounded-2xl p-6 shadow-sm"
         >
-            <p class="text-sm text-gray-500 mb-1">💰 Saldo Saat Ini</p>
+            <p class="text-sm text-gray-500 mb-1">Saldo Saat Ini</p>
             <h3 class="text-3xl font-bold text-green-600">
                 Rp {{ number_format(auth()->user()->saldo ?? 0) }}
             </h3>
@@ -33,13 +33,13 @@
     @if($activeOrder)
     <div class="mb-10">
         <h3 class="text-2xl font-bold text-gray-800 mb-4">
-            🚗 Order Sedang Berjalan
+            Order Sedang Berjalan..
         </h3>
 
         <div class="bg-blue-50 border border-blue-200 rounded-xl p-6 shadow-sm">
             <p class="text-lg font-semibold text-gray-800">
                 👤 Customer:
-                {{ optional($activeOrder->user)->name ?? 'Customer' }}
+                {{ optional($activeOrder->customer)->name ?? 'Customer' }}
             </p>
 
             <p class="text-gray-700 mt-1">
@@ -79,7 +79,7 @@
                     <button
                         class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg font-semibold"
                     >
-                        📍 Sudah Sampai Jemputan
+                        Sudah Sampai Jemputan!
                     </button>
                 </form>
                 @endif @if($activeOrder->status === 'arrived')
@@ -91,7 +91,7 @@
                     <button
                         class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold"
                     >
-                        🚗 Mulai Perjalanan
+                        Mulai Perjalanan...
                     </button>
                 </form>
                 @endif @if($activeOrder->status === 'on_the_way')
@@ -160,7 +160,7 @@
     @endif
 
     {{-- ================= ORDER MASUK ================= --}}
-    <h3 class="text-2xl font-bold text-gray-800 mb-5">📥 Order Masuk</h3>
+    <h3 class="text-2xl font-bold text-gray-800 mb-5">Order Masuk...</h3>
 
     @forelse($pendingOrders as $order)
     <div class="bg-white rounded-xl shadow-sm border mb-5">
@@ -217,7 +217,7 @@
     </div>
     @empty
     <div class="bg-white rounded-xl p-8 text-center shadow-sm">
-        <p class="text-gray-500">📭 Tidak ada order masuk</p>
+        <p class="text-gray-500">Tidak ada order masuk</p>
     </div>
     @endforelse
 </div>
@@ -237,22 +237,24 @@
     }
 </style>
 <script>
-document.getElementById('completeOrderBtn').addEventListener('click', function () {
-    Swal.fire({
-        title: 'Selesaikan Pesanan?',
-        text: 'Pastikan pesanan sudah benar-benar selesai.',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Ya, Selesaikan',
-        cancelButtonText: 'Batal',
-        confirmButtonColor: '#16a34a',
-        cancelButtonColor: '#d33',
-    }).then((result) => {
-        if (result.isConfirmed) {
-            this.closest('form').submit();
-        }
-    });
-});
+    document
+        .getElementById("completeOrderBtn")
+        .addEventListener("click", function () {
+            Swal.fire({
+                title: "Selesaikan Pesanan?",
+                text: "Pastikan pesanan sudah benar-benar selesai.",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Ya, Selesaikan",
+                cancelButtonText: "Batal",
+                confirmButtonColor: "#16a34a",
+                cancelButtonColor: "#d33",
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    this.closest("form").submit();
+                }
+            });
+        });
 </script>
 
 @endsection

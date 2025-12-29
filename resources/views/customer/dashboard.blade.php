@@ -6,7 +6,7 @@
             Halo, {{ auth()->user()->name }} 👋
         </h2>
         <p class="text-gray-500 mt-2">
-            Mau ke mana hari ini? KampusGO siap bantu 🚀
+            Mau ke mana hari ini? KampusGO siap bantu...
         </p>
     </div>
 
@@ -15,7 +15,7 @@
         <div
             class="bg-gradient-to-br from-blue-50 to-white border border-blue-200 rounded-2xl p-6 shadow-sm"
         >
-            <p class="text-sm text-gray-500 mb-1">💰 Saldo E-Wallet</p>
+            <p class="text-sm text-gray-500 mb-1">Saldo E-Wallet</p>
 
             <h3 class="text-3xl font-bold text-blue-600">
                 Rp {{ number_format(auth()->user()->saldo ?? 0) }}
@@ -58,7 +58,26 @@
         <h3 class="text-xl font-semibold text-gray-800 mb-2">
             Mencari Driver Terdekat...
         </h3>
-        <p class="text-gray-500">Sistem sedang memindai lokasi driver 📡</p>
+        <p class="text-gray-500 mb-5">
+            Sistem sedang memindai lokasi driver 📡
+        </p>
+
+        {{-- BATALKAN PESANAN --}}
+        <form
+            id="cancelOrderForm"
+            method="POST"
+            action="{{ route('customer.order.cancel', $activeOrder->id) }}"
+        >
+            @csrf
+
+            <button
+                type="button"
+                onclick="confirmCancelOrder()"
+                class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-semibold"
+            >
+                Batalkan Pesanan
+            </button>
+        </form>
     </div>
     @endif
 
@@ -66,10 +85,10 @@
     @if(in_array($activeOrder->status, ['accepted','arrived','on_the_way']))
     <div class="mb-10">
         <h3 class="text-xl font-semibold text-center mb-3">
-            @if($activeOrder->status === 'accepted') Driver Menuju Lokasi 🚗
-            @elseif($activeOrder->status === 'arrived') Driver Sudah Sampai 📍
+            @if($activeOrder->status === 'accepted') Driver Menuju Lokasi...
+            @elseif($activeOrder->status === 'arrived') Driver Sudah Sampai...
             @elseif($activeOrder->status === 'on_the_way') Sedang Dalam
-            Perjalanan 🚀 @endif
+            Perjalanan... @endif
         </h3>
 
         {{-- JALAN --}}
@@ -206,7 +225,7 @@
             <div
                 class="w-16 h-16 bg-white rounded-full flex items-center justify-center text-3xl text-blue-600 mb-4"
             >
-                🚕
+                🛵
             </div>
             <h3 class="text-xl font-semibold mb-2">Antar Jemput</h3>
             <p class="text-sm text-gray-500 mb-6">
@@ -283,4 +302,23 @@
             });
     }, 4000);
 </script>
+<script>
+function confirmCancelOrder() {
+    Swal.fire({
+        title: 'Batalkan Pesanan?',
+        text: 'Pesanan akan dibatalkan dan tidak bisa dikembalikan.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, Batalkan',
+        cancelButtonText: 'Tidak',
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6b7280',
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('cancelOrderForm').submit();
+        }
+    });
+}
+</script>
+
 @endif @endsection
