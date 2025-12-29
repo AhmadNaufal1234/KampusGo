@@ -10,6 +10,30 @@
         </p>
     </div>
 
+    <!-- SALDO CUSTOMER -->
+    <div class="grid md:grid-cols-3 gap-6 mb-10">
+        <div
+            class="bg-gradient-to-br from-blue-50 to-white border border-blue-200 rounded-2xl p-6 shadow-sm"
+        >
+            <p class="text-sm text-gray-500 mb-1">💰 Saldo E-Wallet</p>
+
+            <h3 class="text-3xl font-bold text-blue-600">
+                Rp {{ number_format(auth()->user()->saldo ?? 0) }}
+            </h3>
+
+            <p class="text-xs text-gray-500 mt-2">
+                Digunakan untuk pembayaran pesanan e-wallet
+            </p>
+
+            <a
+                href="{{ route('customer.topup') }}"
+                class="inline-block mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold"
+            >
+                ➕ Top Up Saldo
+            </a>
+        </div>
+    </div>
+
     @if($activeOrder) @php $driverName = $activeOrder->mitra->name ?? 'Driver';
     @endphp
 
@@ -128,7 +152,7 @@
         }
     </style>
 
-    @if($activeOrder && in_array($activeOrder->status, ['accepted',
+    @if($activeOrder && in_array($activeOrder->status, ['accepted', 'arrived',
     'on_the_way']))
     {{-- CHAT DRIVER --}}
     <div class="mt-6 bg-white border rounded-xl p-4 shadow">

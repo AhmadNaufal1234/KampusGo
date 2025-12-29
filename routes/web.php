@@ -7,6 +7,7 @@ use App\Http\Controllers\Customer\DashboardController as CustomerDashboardContro
 use App\Http\Controllers\Mitra\MitraOrderController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\Mitra\MitraTopupController;
+use App\Http\Controllers\TopUpController;
 
 
 /*
@@ -70,6 +71,12 @@ Route::middleware(['auth', 'role:customer'])
 
         Route::post('/order/{order}/cancel', [CustomerOrderController::class, 'cancel'])
             ->name('order.cancel');
+
+        Route::get('/topup', [TopUpController::class, 'create'])
+            ->name('topup');
+
+        Route::post('/topup', [TopUpController::class, 'store'])
+            ->name('topup.store');
     });
 
 Route::post(
@@ -137,6 +144,15 @@ Route::middleware(['auth', 'role:admin'])
             return view('admin.dashboard');
         })->name('dashboard');
     });
+
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/topup', [TopUpController::class, 'create'])
+        ->name('topup');
+
+    Route::post('/topup', [TopUpController::class, 'store'])
+        ->name('topup.store');
+});
 
 /*
 |--------------------------------------------------------------------------

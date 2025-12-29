@@ -102,6 +102,8 @@
                 >
                     @csrf
                     <button
+                        type="button"
+                        id="completeOrderBtn"
                         class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold"
                     >
                         ✅ Selesaikan Pesanan
@@ -234,4 +236,23 @@
         animation: drive 6s linear infinite;
     }
 </style>
+<script>
+document.getElementById('completeOrderBtn').addEventListener('click', function () {
+    Swal.fire({
+        title: 'Selesaikan Pesanan?',
+        text: 'Pastikan pesanan sudah benar-benar selesai.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, Selesaikan',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#16a34a',
+        cancelButtonColor: '#d33',
+    }).then((result) => {
+        if (result.isConfirmed) {
+            this.closest('form').submit();
+        }
+    });
+});
+</script>
+
 @endsection

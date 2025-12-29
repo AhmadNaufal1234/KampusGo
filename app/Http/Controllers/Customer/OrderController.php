@@ -24,10 +24,31 @@ class OrderController extends Controller
             'item_description'    => 'nullable|string'
         ]);
 
-        // Tarif sederhana
+        // =============================
+        // HITUNG TARIF
+        // =============================
         $tarifPerKm = 3000;
         $price = $request->distance_km * $tarifPerKm;
 
+        // =============================
+        // E-WALLET → CEK & TAHAN SALDO
+        // =============================
+        if ($request->payment_method === 'ewallet') {
+
+            if (auth()->user()->saldo < $price) {
+                return back()->with(
+                    'error',
+                    'Saldo e-wallet tidak cukup. Silakan top up terlebih dahulu.'
+                );
+            }
+
+            // TAHAN SALDO (ESCROW)
+            auth()->user()->decrement('saldo', $price);
+        }
+
+        // =============================
+        // BUAT ORDER
+        // =============================
         Order::create([
             'customer_id'         => auth()->id(),
             'service_type'        => $request->service_type,
@@ -37,13 +58,17 @@ class OrderController extends Controller
             'distance_km'         => $request->distance_km,
             'price'               => $price,
             'payment_method'      => $request->payment_method,
+            'payment_status'      => $request->payment_method === 'ewallet'
+                ? 'held'   // saldo ditahan sistem
+                : null,
             'status'              => 'pending',
         ]);
 
         return redirect()
             ->route('customer.dashboard')
-            ->with('success', 'Pesanan berhasil dibuat');
+            ->with('success', 'Pesanan berhasil dibuat 🚀');
     }
+
 
     public function history()
     {

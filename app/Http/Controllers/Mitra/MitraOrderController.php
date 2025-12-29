@@ -67,25 +67,50 @@ class MitraOrderController extends Controller
         }
 
         DB::transaction(function () use ($order) {
+
             $driver = auth()->user();
 
-            $potongan = $order->price * 0.02;
+            // Fee platform 2%
+            $fee = $order->price * 0.02;
 
-            if ($driver->saldo < $potongan) {
-                throw new \Exception('Saldo tidak cukup');
+            // =============================
+            // 💳 E-WALLET (ESCROW SYSTEM)
+            // =============================
+            if ($order->payment_method === 'ewallet') {
+
+                // Uang masuk ke driver (setelah fee)
+                $driver->increment('saldo', $order->price - $fee);
+
+                // Tandai pembayaran selesai
+                $order->update([
+                    'payment_status' => 'released'
+                ]);
             }
 
-            // Potong saldo
-            $driver->decrement('saldo', $potongan);
+            // =============================
+            // 💵 CASH
+            // =============================
+            if ($order->payment_method === 'cash') {
 
-            // Update order
+                // Driver wajib punya saldo utk fee
+                if ($driver->saldo < $fee) {
+                    throw new \Exception('Saldo tidak cukup untuk menyelesaikan pesanan.');
+                }
+
+                // Potong fee
+                $driver->decrement('saldo', $fee);
+            }
+
+            // =============================
+            // Selesaikan Order
+            // =============================
             $order->update([
                 'status' => 'completed'
             ]);
         });
 
         return redirect()->route('mitra.dashboard')
-            ->with('success', 'Pesanan selesai. Saldo terpotong 2%.');
+            ->with('success', 'Pesanan selesai.');
     }
 
     public function reject(Order $order)

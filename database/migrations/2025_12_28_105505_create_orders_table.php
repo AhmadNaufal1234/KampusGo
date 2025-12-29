@@ -47,14 +47,21 @@ return new class extends Migration
             // Pembayaran
             $table->enum('payment_method', ['cash', 'ewallet']);
 
-            // STATUS ORDER (WAJIB SAMA DENGAN CONTROLLER)
+            // 🔥 STATUS PEMBAYARAN (ESCROW SYSTEM)
+            $table->enum('payment_status', [
+                'unpaid',   // cash / belum bayar
+                'paid',     // ewallet masuk sistem
+                'released'  // saldo sudah diberikan ke driver
+            ])->default('unpaid');
+
+            // Status order
             $table->enum('status', [
-                'pending',        // menunggu driver
-                'accepted',       // driver menerima
-                'arrived',        // driver tiba di titik jemput
-                'on_the_way',     // perjalanan berlangsung
-                'completed',      // selesai
-                'rejected',       // ditolak driver
+                'pending',
+                'accepted',
+                'arrived',
+                'on_the_way',
+                'completed',
+                'rejected',
             ])->default('pending');
 
             $table->timestamps();
